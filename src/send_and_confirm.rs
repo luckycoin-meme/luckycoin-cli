@@ -44,6 +44,9 @@ pub enum ComputeBudget {
 }
 
 impl Miner {
+    /*
+     * 用于发送并确认交易。
+     */
     pub async fn send_and_confirm(
         &self,
         ixs: &[Instruction],
@@ -56,10 +59,10 @@ impl Miner {
         let fee_payer = self.fee_payer();
         let mut send_client = self.rpc_client.clone();
 
-        // Return error, if balance is zero
+        // 如果余额为零，则返回错误
         self.check_balance().await;
 
-        // Set compute budget
+        // 设置计算预算
         let mut final_ixs = vec![];
         match compute_budget {
             ComputeBudget::Dynamic => {
@@ -70,15 +73,15 @@ impl Miner {
             }
         }
 
-        // Set compute unit price
+        // 设置计算单位价格
         final_ixs.push(ComputeBudgetInstruction::set_compute_unit_price(
             self.priority_fee.unwrap_or(0),
         ));
 
-        // Add in user instructions
+        // 添加用户指令
         final_ixs.extend_from_slice(ixs);
 
-        // Add jito tip
+        // 添加 Jito 提示
         let jito_tip = *self.tip.read().unwrap();
         if jito_tip > 0 {
             send_client = self.jito_client.clone();
@@ -102,13 +105,13 @@ impl Miner {
                         .unwrap()
                         .to_string(),
                 )
-                .unwrap(),
+                    .unwrap(),
                 jito_tip,
             ));
             progress_bar.println(format!("  Jito tip: {} SOL", lamports_to_sol(jito_tip)));
         }
 
-        // Build tx
+        // 构建交易
         let send_cfg = RpcSendTransactionConfig {
             skip_preflight: true,
             preflight_commitment: Some(CommitmentLevel::Confirmed),
@@ -118,14 +121,14 @@ impl Miner {
         };
         let mut tx = Transaction::new_with_payer(&final_ixs, Some(&fee_payer.pubkey()));
 
-        // Submit tx
+        // 提交交易
         let mut attempts = 0;
         loop {
-            progress_bar.set_message(format!("Submitting transaction... (attempt {})", attempts,));
+            progress_bar.set_message(format!("Submitting transaction... (attempt {})", attempts, ));
 
-            // Sign tx with a new blockhash (after approximately ~45 sec)
+            // 使用新的区块哈希重新签名交易（大约每45秒）
             if attempts % 10 == 0 {
-                // Reset the compute unit price
+                // 重置计算单位价格
                 if self.dynamic_fee {
                     let fee = match self.dynamic_fee().await {
                         Ok(fee) => {
@@ -159,7 +162,7 @@ impl Miner {
                 }
             }
 
-            // Send transaction
+            // 发送交易
             attempts += 1;
             match send_client
                 .send_transaction_with_config(&tx, send_cfg)
@@ -191,7 +194,7 @@ impl Miner {
                                                                     attempts = 0;
                                                                     log_error(&progress_bar, "Needs reset. Retrying...", false);
                                                                     break 'confirm;
-                                                                },
+                                                                }
                                                                 _ => {
                                                                     log_error(&progress_bar, &err.to_string(), true);
                                                                     return Err(ClientError {
@@ -200,7 +203,7 @@ impl Miner {
                                                                     });
                                                                 }
                                                             }
-                                                        },
+                                                        }
 
                                                         // Non custom instruction error, return
                                                         _ => {
@@ -211,7 +214,7 @@ impl Miner {
                                                             });
                                                         }
                                                     }
-                                                },
+                                                }
 
                                                 // Non instruction error, return
                                                 _ => {

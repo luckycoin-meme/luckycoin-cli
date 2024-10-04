@@ -10,17 +10,18 @@ use crate::{
 };
 
 impl Miner {
+    // 异步方法，用于关闭矿工账户
     pub async fn close(&self) {
-        // Confirm proof exists
-        let signer = self.signer();
+        // 确认证明存在
+        let signer = self.signer(); // 获取签名者
         let proof = get_proof_with_authority(&self.rpc_client, signer.pubkey()).await;
 
         // Confirm the user wants to close.
         if !ask_confirm(
-            format!("{} You have {} ORE staked in this account.\nAre you sure you want to {}close this account? [Y/n]", 
-                "WARNING".yellow(),
-                amount_to_ui_amount(proof.balance, ore_api::consts::TOKEN_DECIMALS),
-                if proof.balance.gt(&0) { "claim your stake and "} else { "" }
+            format!("{} You have {} ORE staked in this account.\nAre you sure you want to {}close this account? [Y/n]",
+                    "WARNING".yellow(),
+                    amount_to_ui_amount(proof.balance, ore_api::consts::TOKEN_DECIMALS),
+                    if proof.balance.gt(&0) { "claim your stake and " } else { "" }
             ).as_str()
         ) {
             return;
@@ -33,7 +34,7 @@ impl Miner {
                 to: None,
                 pool_url: None,
             })
-            .await;
+                .await;
         }
 
         // Submit close transaction

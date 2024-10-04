@@ -28,10 +28,12 @@ pub async fn _get_treasury(client: &RpcClient) -> Treasury {
 }
 
 pub async fn get_config(client: &RpcClient) -> Config {
+    // 从 RPC 客户端获取配置账户的数据
     let data = client
         .get_account_data(&CONFIG_ADDRESS)
         .await
         .expect("Failed to get config account");
+    // 将获取到的数据解析为 Config 结构体
     *Config::try_from_bytes(&data).expect("Failed to parse config account")
 }
 

@@ -16,18 +16,27 @@ use crate::{
 };
 
 impl Miner {
+    // 处理奖励的领取操作
     pub async fn claim(&self, args: ClaimArgs) -> Result<(), crate::error::Error> {
+        // 检查提供的pool_url是否存在
         match args.pool_url {
+            // 如果pool_url存在
             Some(ref pool_url) => {
+                // 创建一个新的Pool实例，初始化HTTP客户端和池URL
                 let pool = &Pool {
                     http_client: reqwest::Client::new(),
                     pool_url: pool_url.clone(),
                 };
+                // 异步调用 claim_from_pool 方法，并处理可能的错误
                 let _ = self.claim_from_pool(args, pool).await?;
+                // 返回OK
                 Ok(())
             }
+            // 如果pool_url不存在
             None => {
+                // 异步调用claim_from_proof方法，用于从证明中领取奖励
                 self.claim_from_proof(args).await;
+                // 返回成功
                 Ok(())
             }
         }
@@ -81,9 +90,9 @@ impl Miner {
                     "{} ORE",
                     amount_to_ui_amount(amount, ore_api::consts::TOKEN_DECIMALS)
                 )
-                .bold(),
+                    .bold(),
             )
-            .as_str(),
+                .as_str(),
         ) {
             return;
         }
@@ -148,9 +157,9 @@ impl Miner {
                     "{} ORE",
                     amount_to_ui_amount(amount, ore_api::consts::TOKEN_DECIMALS)
                 )
-                .bold(),
+                    .bold(),
             )
-            .as_str(),
+                .as_str(),
         ) {
             return Err(crate::error::Error::Internal("exited claim".to_string()));
         }
